@@ -1,0 +1,59 @@
+<relevant_code>
+
+
+
+<file file_path=/main.go>
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
+type Group struct {
+	ID       int
+	Number   string
+	Year     int
+	Students []Students
+}
+type Students struct {
+	LastName   string
+	FirstName  string
+	MiddleName string
+	Birthday   string
+	Address    string
+	Phone      string
+	Rating     []int
+}
+
+func main() {
+	var group Group
+	err := json.NewDecoder(os.Stdin).Decode(&group)
+	if err != nil {
+		fmt.Println("Ошибка декодирования JSON:", err)
+		return
+	}
+	totalRating := 0
+	numStudents := len(group.Students)
+
+	for _, student := range group.Students {
+		totalRating += len(student.Rating)
+	}
+	avarage := float64(totalRating) / float64(numStudents)
+	result := map[string]float64{
+		"Avarage": avarage,
+	}
+	output, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		fmt.Println("Ошибка кодирования JSON:", err)
+		return
+	}
+	fmt.Println(string(output))
+}
+
+</file>
+
+
+
+</relevant_code>
