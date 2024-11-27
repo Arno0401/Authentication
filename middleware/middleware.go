@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"converter.go/utils"
+	"authentication.go/utils"
 	"net/http"
 )
 

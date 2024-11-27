@@ -1,9 +1,9 @@
 package main
 
 import (
-	"converter.go/db"
-	"converter.go/handler"
-	"converter.go/middleware"
+	"authentication.go/db"
+	"authentication.go/handler"
+	"authentication.go/middleware"
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
@@ -27,7 +27,6 @@ func main() {
 		log.Println("Error listening:", err)
 		return
 	}
-
 	defer func(DB *sql.DB) {
 		err := DB.Close()
 		if err != nil {

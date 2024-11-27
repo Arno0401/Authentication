@@ -1,10 +1,10 @@
 package handler
 
 import (
-	converter "converter.go"
-	"converter.go/db"
-	"converter.go/models"
-	"converter.go/utils"
+	"authentication.go/db"
+	"authentication.go/models"
+	"authentication.go/requests"
+	"authentication.go/utils"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -40,7 +40,7 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func insertUser(db *sql.DB, user converter.SignUpRequest) error {
+func insertUser(db *sql.DB, user requests.SignUpRequest) error {
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
 		log.Println("Ошибка при хешировании пароля:", err)
@@ -67,7 +67,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var singUp converter.SignUpRequest
+	var singUp requests.SignUpRequest
 	err = json.Unmarshal(bytesBody, &singUp)
 
 	if err != nil {
@@ -121,7 +121,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var changePass converter.ChangePasswordRequest
+	var changePass requests.ChangePasswordRequest
 	err = json.Unmarshal(bytesBody, &changePass)
 
 	exists, err := isUserExists(db.DB, changePass.Login)
@@ -176,7 +176,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var signIn converter.SignInRequest
+	var signIn requests.SignInRequest
 	err = json.Unmarshal(bytesBody, &signIn)
 
 	exists, err := isUserExists(db.DB, signIn.Login)
