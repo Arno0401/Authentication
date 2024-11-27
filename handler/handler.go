@@ -2,8 +2,8 @@ package handler
 
 import (
 	"authentication.go/db"
+	"authentication.go/dto"
 	"authentication.go/models"
-	"authentication.go/requests"
 	"authentication.go/utils"
 	"database/sql"
 	"encoding/json"
@@ -40,7 +40,7 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func insertUser(db *sql.DB, user requests.SignUpRequest) error {
+func insertUser(db *sql.DB, user dto.SignUpRequest) error {
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
 		log.Println("Ошибка при хешировании пароля:", err)
@@ -67,7 +67,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var singUp requests.SignUpRequest
+	var singUp dto.SignUpRequest
 	err = json.Unmarshal(bytesBody, &singUp)
 
 	if err != nil {
@@ -79,10 +79,13 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		utils.ResponseError(w, http.StatusUnauthorized, "Логин должен быть больше 5 символов")
 		return
 	}
+	if !validateLatinLogin(singUp.Login) {
+		utils.ResponseError(w, http.StatusUnauthorized, "Должен содержать только латинские буквы и цифры")
+		return
+	}
 
 	if !validatePassword(singUp.Password) {
-		utils.ResponseError(w, http.StatusUnauthorized, `Пароль должен быть больше 8 символов,
-		содержать хотя бы одну цифру и один специальный символ`)
+		utils.ResponseError(w, http.StatusUnauthorized, "Пароль должен быть больше 8 символов,должен содержать хотя бы одну цифру и один специальный символ")
 		return
 	}
 
@@ -121,7 +124,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var changePass requests.ChangePasswordRequest
+	var changePass dto.ChangePasswordRequest
 	err = json.Unmarshal(bytesBody, &changePass)
 
 	exists, err := isUserExists(db.DB, changePass.Login)
@@ -176,7 +179,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(r.Body)
 
-	var signIn requests.SignInRequest
+	var signIn dto.SignInRequest
 	err = json.Unmarshal(bytesBody, &signIn)
 
 	exists, err := isUserExists(db.DB, signIn.Login)
@@ -409,6 +412,15 @@ func CreateToken(user models.User) (models.Token, error) {
 }
 
 func validateLogin(login string) bool {
+	return len(login) >= 5
+}
+func validateLatinLogin(login string) bool {
+
+	for _, char := range login {
+		if !unicode.Is(unicode.Latin, char) && !unicode.IsDigit(char) {
+			return false
+		}
+	}
 	return len(login) >= 5
 }
 
