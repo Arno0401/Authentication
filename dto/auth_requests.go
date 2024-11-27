@@ -1,4 +1,4 @@
-package requests
+package dto
 
 type SignUpRequest struct {
 	FullName string `json:"full_name"`

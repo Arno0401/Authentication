@@ -13,16 +13,15 @@ func AdminMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Проверяем токен
 		claims, err := utils.TokenParse(tokenString)
 		if err != nil {
-			http.Error(w, "Неправильный токен", http.StatusUnauthorized)
+			utils.ResponseError(w, http.StatusUnauthorized, "Неправильный токен")
 			return
 		}
 
 		role, ok := claims["role"].(string)
 		if !ok || role != "admin" {
-			http.Error(w, "Нет доступа!", http.StatusForbidden)
+			utils.ResponseError(w, http.StatusForbidden, "Нет доступа!")
 			return
 		}
 
