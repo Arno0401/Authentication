@@ -33,4 +33,5 @@ func main() {
 			log.Println("Ошибка при закрытии базы данных:", err)
 		}
 	}(db.DB)
+	log.Println("Server is running on http://localhost:8080")
 }
