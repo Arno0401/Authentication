@@ -18,7 +18,7 @@ type Config struct {
 var DB *sql.DB
 
 func ConnectDB() {
-	file, err := os.Open("config.json")
+	file, err := os.Open("../config.json")
 	if err != nil {
 		log.Fatalf("Ошибка открытия файла конфигурации: %v", err)
 	}

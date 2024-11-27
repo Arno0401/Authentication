@@ -20,6 +20,7 @@ func main() {
 	http.HandleFunc("/refresh", handler.RefreshToken)
 	http.HandleFunc("/my-info", handler.MyInfo)
 	http.Handle("/users", middleware.AdminMiddleware(http.HandlerFunc(handler.GetUsers)))
+	http.Handle("/user-id", middleware.AdminMiddleware(http.HandlerFunc(handler.GetUserID)))
 
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
@@ -33,5 +34,4 @@ func main() {
 			log.Println("Ошибка при закрытии базы данных:", err)
 		}
 	}(db.DB)
-
 }

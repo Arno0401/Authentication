@@ -7,12 +7,14 @@ import (
 	"converter.go/utils"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"io"
 	"log"
 	"net/http"
 	"slices"
+	"strconv"
 	"time"
 	"unicode"
 )
@@ -28,7 +30,6 @@ func isUserExists(db *sql.DB, login string) (bool, error) {
 		log.Println("Ошибка запроса в базу данных", err)
 		return false, err
 	}
-	log.Println(count)
 	return count > 0, nil
 }
 func hashPassword(password string) (string, error) {
@@ -98,7 +99,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = insertUser(db.DB, singUp)
 	if err != nil {
-		log.Println(err)
+		log.Println("Ошибка при создании пользователя", err)
 
 		utils.ResponseError(w, http.StatusInternalServerError, "Произошла ошибка при создании пользователя")
 		return
@@ -184,7 +185,6 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(exists)
 	if exists {
 		var user models.User
 
@@ -194,7 +194,6 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("Ошибка запроса в базу данных", err)
 		}
-		log.Println(user.Password)
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(signIn.Password))
 		if err != nil {
 			utils.ResponseError(w, http.StatusUnauthorized, map[string]string{"error": "Неправильный пароль"})
@@ -261,16 +260,20 @@ func MyInfo(w http.ResponseWriter, r *http.Request) {
 	utils.Response(w, http.StatusOK, user)
 }
 
-func GetUsers(w http.ResponseWriter, r *http.Request) {
+func GetUserID(w http.ResponseWriter, r *http.Request) {
+	strID := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(strID)
+	if err != nil {
+		utils.ResponseError(w, http.StatusInternalServerError, "Invalid ID")
+		return
+	}
 
-	id := r.URL.Query().Get("id")
-
-	if id != "" {
+	if id != 0 {
 		var user models.User
 		query := "SELECT id, full_name, login, role FROM users WHERE id = $1"
 		err := db.DB.QueryRow(query, id).Scan(&user.ID, &user.FullName, &user.Login, &user.Role)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				utils.ResponseError(w, http.StatusNotFound, "Пользователь не найден")
 			} else {
 				utils.ResponseError(w, http.StatusInternalServerError, "Ошибка при получении пользователя")
@@ -280,6 +283,9 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		utils.Response(w, http.StatusOK, user)
 		return
 	}
+
+}
+func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := db.DB.Query("SELECT id, full_name, login, role FROM users order by id desc")
 	if err != nil {
@@ -306,7 +312,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Response(w, http.StatusOK, usersInfo)
-
 }
 
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
