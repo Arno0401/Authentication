@@ -3,9 +3,10 @@ package middleware
 import (
 	"authentication.go/utils"
 	"net/http"
+	"slices"
 )
 
-func AdminMiddleware(next http.Handler) http.Handler {
+func CheckRoleMiddleware(next http.Handler, roles ...string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
@@ -19,8 +20,8 @@ func AdminMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		role, ok := claims["role"].(string)
-		if !ok || role != "admin" {
+		userRole, ok := claims["role"].(string)
+		if !ok || !slices.Contains(roles, userRole) {
 			utils.ResponseError(w, http.StatusForbidden, "Нет доступа!")
 			return
 		}

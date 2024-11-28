@@ -4,6 +4,7 @@ import (
 	"authentication.go/db"
 	"authentication.go/handler"
 	"authentication.go/middleware"
+	"authentication.go/models/roles"
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
@@ -19,8 +20,10 @@ func main() {
 	http.HandleFunc("/get-info", handler.GettokenInfo)
 	http.HandleFunc("/refresh", handler.RefreshToken)
 	http.HandleFunc("/my-info", handler.MyInfo)
-	http.Handle("/users", middleware.AdminMiddleware(http.HandlerFunc(handler.GetUsers)))
-	http.Handle("/user-id", middleware.AdminMiddleware(http.HandlerFunc(handler.GetUserID)))
+	http.Handle("/users", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.GetUsers), roles.ADMIN, roles.SUPERVISOR))
+	http.Handle("/user-id", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.GetUserID), roles.ADMIN, roles.SUPERVISOR))
+	http.Handle("/dell-users", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.DeleteUsers), roles.SUPERVISOR))
+	http.Handle("/change-role", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.ChangeRole), roles.SUPERVISOR))
 
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
@@ -33,5 +36,4 @@ func main() {
 			log.Println("Ошибка при закрытии базы данных:", err)
 		}
 	}(db.DB)
-	log.Println("Server is running on http://localhost:8080")
 }

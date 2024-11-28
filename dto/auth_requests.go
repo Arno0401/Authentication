@@ -16,3 +16,6 @@ type SignInRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
+type SuperVisorRequest struct {
+	Role string `json:"role"`
+}
