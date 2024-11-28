@@ -267,7 +267,7 @@ func GetUserID(w http.ResponseWriter, r *http.Request) {
 	strID := r.URL.Query().Get("id")
 	id, err := strconv.Atoi(strID)
 	if err != nil {
-		utils.ResponseError(w, http.StatusInternalServerError, "Invalid ID")
+		utils.ResponseError(w, http.StatusInternalServerError, "Произошла ошибка при получении ID пользователя")
 		return
 	}
 
@@ -315,6 +315,86 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Response(w, http.StatusOK, usersInfo)
+}
+
+func DeleteUsers(w http.ResponseWriter, r *http.Request) {
+	strID := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(strID)
+	if err != nil {
+		utils.ResponseError(w, http.StatusInternalServerError, "Произошла ошибка при получении ID пользователя")
+		return
+	}
+
+	query1 := `DELETE FROM users WHERE id = $1`
+
+	res, err := db.DB.Exec(query1, id)
+	if err != nil {
+		log.Println("Ошибка при обновлении пароля:", err)
+		return
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		log.Println("Произошла ошибка при удалении пользователя", err)
+		return
+	} else if affected == 0 {
+		utils.Response(w, http.StatusNotFound, "Пользователь не найден")
+		return
+	}
+	utils.Response(w, http.StatusOK, "Пользователь успешно удален")
+}
+
+func ChangeRole(w http.ResponseWriter, r *http.Request) {
+
+	strID := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(strID)
+	if err != nil {
+		utils.ResponseError(w, http.StatusInternalServerError, "Произошла ошибка при получении ID пользователя")
+		return
+	}
+
+	var req dto.SuperVisorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.ResponseError(w, http.StatusBadRequest, "Неверный формат данных")
+		return
+	}
+	if req.Role != "admin" && req.Role != "user" {
+		utils.ResponseError(w, http.StatusBadRequest, "Недопустимая роль")
+		return
+	}
+	var currentRole string
+	query := `SELECT role FROM users WHERE id = $1`
+	err = db.DB.QueryRow(query, id).Scan(&currentRole)
+	if err != nil {
+		utils.ResponseError(w, http.StatusNotFound, "Пользователь не найден")
+		return
+	}
+	if id == 14 {
+		utils.ResponseError(w, http.StatusBadRequest, "Нельзя изменить роль Супервайзера")
+		return
+	}
+	if currentRole == req.Role {
+		utils.Response(w, http.StatusOK, "Роль уже соответствует заданной")
+		return
+	}
+	queryUpdate := `UPDATE users SET role = $1 WHERE id = $2`
+	res, err := db.DB.Exec(queryUpdate, req.Role, id)
+	if err != nil {
+		log.Println("Ошибка при обновлении роли:", err)
+		utils.ResponseError(w, http.StatusInternalServerError, "Ошибка при обновлении роли")
+		return
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		log.Println("Произошла ошибка при смене роли пользователя", err)
+		return
+	} else if affected == 0 {
+		utils.Response(w, http.StatusNotFound, "Пользователь не найден")
+		return
+	}
+
+	utils.Response(w, http.StatusOK, "Роль успешно изменена")
 }
 
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
