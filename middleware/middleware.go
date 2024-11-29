@@ -10,7 +10,7 @@ func CheckRoleMiddleware(next http.Handler, roles ...string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
-			http.Error(w, "Токен отсутствует", http.StatusUnauthorized)
+			utils.ResponseError(w, http.StatusUnauthorized, "Токен отсутствует")
 			return
 		}
 
