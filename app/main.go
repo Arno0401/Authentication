@@ -24,6 +24,7 @@ func main() {
 	http.Handle("/user-id", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.GetUserID), roles.ADMIN, roles.SUPERVISOR))
 	http.Handle("/dell-users", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.DeleteUsers), roles.SUPERVISOR))
 	http.Handle("/change-role", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.ChangeRole), roles.SUPERVISOR))
+	http.Handle("/get-payments", middleware.CheckRoleMiddleware(http.HandlerFunc(handler.GetTransaction), roles.ADMIN, roles.SUPERVISOR))
 
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {

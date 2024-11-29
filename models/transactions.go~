@@ -1,0 +1,9 @@
+package models
+
+type Transaction struct {
+	From   int `json:"from_id"`
+	To     int `json:"to_id"`
+	Sender *int `json:"sender"`
+	Recever *int `json:"recever"`
+	Amount *float64 `json:"amount"`
+}
