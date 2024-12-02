@@ -462,7 +462,7 @@ func CreateToken(user models.User) (models.Token, error) {
 		"id":   user.ID,
 		"role": user.Role,
 		"type": "access",
-		"exp":  time.Now().Add(time.Minute * 10).Unix(),
+		"exp":  time.Now().Add(time.Minute * 100).Unix(),
 	})
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
